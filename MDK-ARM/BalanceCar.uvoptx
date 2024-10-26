@@ -22,7 +22,7 @@
   </DaveTm>
 
   <Target>
-    <TargetName>R8T6_Balancing_car</TargetName>
+    <TargetName>BalanceCar</TargetName>
     <ToolsetNumber>0x4</ToolsetNumber>
     <ToolsetName>ARM-ADS</ToolsetName>
     <TargetOption>

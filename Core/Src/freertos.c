@@ -52,16 +52,16 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for myTask02 */
 osThreadId_t myTask02Handle;
 const osThreadAttr_t myTask02_attributes = {
-    .name = "myTask02",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "myTask02",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,12 +75,11 @@ void StartTask02(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
-void MX_FREERTOS_Init(void)
-{
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -115,6 +114,7 @@ void MX_FREERTOS_Init(void)
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -143,7 +143,7 @@ void StartDefaultTask(void *argument)
     // printf("Encoder_A_Count: %d, Encoder_B_Count: %d\n", Encoder_A_Count, Encoder_B_Count);
     if (mpu6050_data.res == 0)
     {
-      printf("roll=%.2f, pitch=%.2f, yaw=%.2f\n", mpu6050_data.Roll, mpu6050_data.Pitch, mpu6050_data.Yaw);
+      printf("roll=%.2f, pitch=%.2f, yaw=%.2f,A_count=%d,B_count=%d\n", mpu6050_data.Roll, mpu6050_data.Pitch, mpu6050_data.Yaw, Encoder_A_Count, Encoder_B_Count);
     }
     osDelay(20);
     osDelay(1);
@@ -183,3 +183,4 @@ void StartTask02(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+

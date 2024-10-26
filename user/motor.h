@@ -4,6 +4,7 @@
 #define MOTOR_A 0 // Right motor
 #define MOTOR_B 1 // Left motor
 
+// 330脉冲每圈 减速比为30:1
 #define CW 0
 #define CCW 1
 void motor_init(void);
