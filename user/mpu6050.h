@@ -1,44 +1,61 @@
-#ifndef __MPU6050_H__
-#define __MPU6050_H__
+/*
+ * mpu6050.h
+ *
+ *  Created on: Nov 13, 2019
+ *      Author: Bulanov Konstantin
+ */
 
-// 这是引用的头文件
-#include "stm32f1xx_hal.h"
-#include "main.h"
+#ifndef INC_GY521_H_
+#define INC_GY521_H_
+
+#endif /* INC_GY521_H_ */
+
+#include <stdint.h>
 #include "i2c.h"
-#include "math.h"
-// 这一堆都是地址，可以看寄存器的文件
-#define MPU6050_ADDR 0xD0   // 从机地址
-#define SMPLRT_DIV_REG 0x19 // 采样率
-#define CONFIG 0x1A
-#define GYRO_CONFIG_REG 0x1B  // 陀螺仪
-#define ACCEL_CONFIG_REG 0x1C // 加速度
-#define ACCEL_XOUT_H_REG 0x3B
-#define TEMP_OUT_H_REG 0x41
-#define GYRO_XOUT_H_REG 0x43
-#define PWR_MGMT_1_REG 0x6B
-#define PWR_MGMT_2_REG 0x6C
-#define WHO_AM_I_REG 0x75
 
-// 这是咱们的函数，初始化，读A，读G
-void MPU6050_Init(void);
-void MPU6050_Read_Accel(void);
-void MPU6050_Read_Gyro(void);
-void MPU6050_Read_Result(void); // 读roll, pitch, yaw
-
-// 导出，导出后数据才能被其他程序应用
+// MPU6050 structure
 typedef struct
 {
-    float Ax;    // 加速度 X
-    float Ay;    // 加速度 Y
-    float Az;    // 加速度 Z
-    float Gx;    // 角速度 X
-    float Gy;    // 角速度 Y
-    float Gz;    // 角速度 Z
-    float Roll;  // 滚转角
-    float Pitch; // 俯仰角
-    float Yaw;   // 偏航角
-} MPU6050_Data;
 
-// 声明一个结构体变量
+    int16_t Accel_X_RAW;
+    int16_t Accel_Y_RAW;
+    int16_t Accel_Z_RAW;
+    double Ax;
+    double Ay;
+    double Az;
 
-#endif
+    int16_t Gyro_X_RAW;
+    int16_t Gyro_Y_RAW;
+    int16_t Gyro_Z_RAW;
+    double Gx;
+    double Gy;
+    double Gz;
+
+    float Temperature;
+
+    double KalmanAngleX;
+    double KalmanAngleY;
+} MPU6050_t;
+
+// Kalman structure
+typedef struct
+{
+    double Q_angle;
+    double Q_bias;
+    double R_measure;
+    double angle;
+    double bias;
+    double P[2][2];
+} Kalman_t;
+
+uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx);
+
+void MPU6050_Read_Accel(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct);
+
+void MPU6050_Read_Gyro(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct);
+
+void MPU6050_Read_Temp(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct);
+
+void MPU6050_Read_All(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct);
+
+double Kalman_getAngle(Kalman_t *Kalman, double newAngle, double newRate, double dt);

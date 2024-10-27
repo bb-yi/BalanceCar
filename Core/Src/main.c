@@ -34,6 +34,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+extern MPU6050_t MPU6050;
 
 /* USER CODE END PTD */
 
@@ -80,7 +81,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -129,9 +129,10 @@ int main(void)
   MX_TIM2_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  // OLED_Init();
+  OLED_Init();
   // HAL_Delay(1000);
-  MPU6050_Init();
+  while (MPU6050_Init(&hi2c1) == 1)
+    ;
   motor_init();
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, Rx_data, 200 - 1); // 启用空闲中断接收
   __HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT);        // 关闭DMA传输过半中断
@@ -150,19 +151,13 @@ int main(void)
 
   // /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // mpu6050_data.res = 1;
-  // while (mpu6050_data.res)
-  // {
-  //   mpu6050_data.res = MPU6050_DMP_Init();
-  //   printf("res: %d\n", mpu6050_data.res);
-  //   // vTaskDelay(pdMS_TO_TICKS(1000));
-  //   HAL_Delay(1000);
-  // }
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    MPU6050_Read_All(&hi2c1, &MPU6050);
+    printf("ax=%.2f, ay=%.2f\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY);
     OLED_ShowNum(0, 16, 123, 3, OLED_8X16);
     OLED_Update();
   }

@@ -117,7 +117,7 @@ void Set_Motor_Velocity(uint8_t motor, float Velocity)
 {
     uint8_t dir = Velocity > 0 ? CW : CCW;
     Velocity = Abs(Velocity);
-    Velocity = float_Map(Velocity, 0, 100, 8, 100);
+    Velocity = Velocity < 1 ? 0 : float_Map(Velocity, 0, 100, 4, 100);
     Velocity = clamp(Velocity, 0, 100);
     Set_Motor_Dir(motor, dir);
     set_pwm_duty(motor, Velocity);

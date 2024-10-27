@@ -33,6 +33,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+extern MPU6050_t MPU6050;
 
 /* USER CODE END PTD */
 
@@ -132,7 +133,6 @@ void MX_FREERTOS_Init(void)
 /* USER CODE BEGIN Header_StartDefaultTask */
 
 extern MOTOR_Data motor_data;
-extern MPU6050_Data mpu6050_data;
 
 /**
  * @brief �???????????查剩余内内存
@@ -154,7 +154,7 @@ void check_stack_usage(TaskHandle_t task)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-
+  osDelay(1000);
   Set_Motor_Velocity(MOTOR_A, 0);
   Set_Motor_Velocity(MOTOR_B, 0);
 
@@ -166,6 +166,9 @@ void StartDefaultTask(void *argument)
 
     // printf("roll=%.2f, pitch=%.2f, yaw=%.2f,roll_rate=%.2f,pitch_rate=%.2f,yaw_rate=%.2f,A_count=%d,B_count=%d\n", mpu6050_data.Roll, mpu6050_data.Pitch, mpu6050_data.Yaw, mpu6050_data.RollRate, mpu6050_data.PitchRate, mpu6050_data.YawRate, Encoder_A_Count, Encoder_B_Count);
     mian_control();
+
+    // set_pwm_duty(MOTOR_A, 0);
+    // set_pwm_duty(MOTOR_B, 0);
 
     // osDelay(20);
 
@@ -192,9 +195,10 @@ void StartTask02(void *argument)
   /* Infinite loop */
   for (;;)
   {
-    MPU6050_Read_Result(); // 读roll, pitch, yaw
-    printf("roll=%.2f, pitch=%.2f, yaw=%.2f,Gx=%.2f,Gy=%.2f,Gz=%.2f\n", mpu6050_data.Roll, mpu6050_data.Pitch, mpu6050_data.Yaw, mpu6050_data.Gx, mpu6050_data.Gy, mpu6050_data.Gz);
-    // osDelay(50);
+    MPU6050_Read_All(&hi2c1, &MPU6050);
+    printf("ax=%.2f, ay=%.2f,gx=%.2f,A_sp=%.2f,B_sp=%.2f\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY, MPU6050.Gx, motor_data.Filtered_Velocity_A, motor_data.Filtered_Velocity_B);
+
+    // osDelay(20);
 
     osDelay(1);
   }
@@ -211,7 +215,11 @@ void StartTask02(void *argument)
 void StartTask03(void *argument)
 {
   /* USER CODE BEGIN StartTask03 */
-
+  motor_data.Filtered_Velocity_A = 0;
+  motor_data.Filtered_Velocity_B = 0;
+  motor_data.last_Encoder_A_Count = 0;
+  motor_data.last_Encoder_B_Count = 0;
+  float Filtered_alpha = 0.8f;
   /* Infinite loop */
   for (;;)
   {
@@ -220,6 +228,8 @@ void StartTask03(void *argument)
     motor_data.last_Encoder_A_Count = motor_data.Encoder_A_Count;
     motor_data.last_Encoder_B_Count = motor_data.Encoder_B_Count;
     // printf("Velocity_A: %.2f, Velocity_B: %.2f\n", motor_data.Velocity_A, motor_data.Velocity_B);
+    motor_data.Filtered_Velocity_A = Filtered_alpha * motor_data.Velocity_A + (1 - Filtered_alpha) * motor_data.Filtered_Velocity_A;
+    motor_data.Filtered_Velocity_B = Filtered_alpha * motor_data.Velocity_B + (1 - Filtered_alpha) * motor_data.Filtered_Velocity_B;
     vTaskDelay(pdMS_TO_TICKS(20));
     osDelay(1);
   }
