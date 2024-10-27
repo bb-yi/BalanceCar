@@ -200,7 +200,17 @@ int MPU6050_DMP_Get_Data(float *pitch, float *roll, float *yaw, short *gx, short
 	return 0;
 }
 MPU6050_Data mpu6050_data;
+float Filtered_alpha = 0.7;
 int MPU6050_Get_Data(void)
 {
-	return MPU6050_DMP_Get_Data(&mpu6050_data.Pitch, &mpu6050_data.Roll, &mpu6050_data.Yaw, &mpu6050_data.GyroX, &mpu6050_data.GyroY, &mpu6050_data.GyroZ, &mpu6050_data.AccX, &mpu6050_data.AccY, &mpu6050_data.AccZ);
+	int result;
+	result = MPU6050_DMP_Get_Data(&mpu6050_data.Pitch, &mpu6050_data.Roll, &mpu6050_data.Yaw, &mpu6050_data.GyroX, &mpu6050_data.GyroY, &mpu6050_data.GyroZ, &mpu6050_data.AccX, &mpu6050_data.AccY, &mpu6050_data.AccZ);
+	mpu6050_data.RollRate = mpu6050_data.GyroX / 131.0f;
+	mpu6050_data.PitchRate = mpu6050_data.GyroY / 131.0f;
+	mpu6050_data.YawRate = mpu6050_data.GyroZ / 131.0f;
+	mpu6050_data.FilteredRoll = mpu6050_data.Roll * Filtered_alpha + mpu6050_data.FilteredRoll * (1.0f - Filtered_alpha);
+	mpu6050_data.FilteredPitch = mpu6050_data.Pitch * Filtered_alpha + mpu6050_data.FilteredPitch * (1.0f - Filtered_alpha);
+	mpu6050_data.FilteredYaw = mpu6050_data.Yaw * Filtered_alpha + mpu6050_data.FilteredYaw * (1.0f - Filtered_alpha);
+
+	return result;
 }

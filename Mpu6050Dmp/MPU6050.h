@@ -10,9 +10,19 @@ typedef struct
     int16_t GyroX;
     int16_t GyroY;
     int16_t GyroZ;
+    float RollRate;
+    float PitchRate;
+    float YawRate;
     float Roll;
     float Pitch;
     float Yaw;
+    float lastRoll;
+    float lastPitch;
+    float lastYaw;
+    // 添加经过一阶低通滤波后的 RollPitchYaw 数据
+    float FilteredRoll;
+    float FilteredPitch;
+    float FilteredYaw;
 } MPU6050_Data;
 
 int MPU6050_DMP_Init(void);

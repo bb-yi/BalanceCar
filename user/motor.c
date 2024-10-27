@@ -79,22 +79,20 @@ void motor_init(void)
     Set_Motor_Dir(MOTOR_A, CW);
     Set_Motor_Dir(MOTOR_B, CW);
 }
-
-int Encoder_A_Count = 0;
-int Encoder_B_Count = 0;
+MOTOR_Data motor_data = {0};
 void Encoder_EXTI_Callback(uint16_t GPIO_Pin)
 {
-    HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET;
+    // HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET;
     if (GPIO_Pin == GPIO_PIN_0)
     {
         // PB0中断处理代码
         if (HAL_GPIO_ReadPin(ENCODE_L_A_GPIO_Port, ENCODE_L_A_Pin) == HAL_GPIO_ReadPin(ENCODE_L_B_GPIO_Port, ENCODE_L_B_Pin))
         {
-            Encoder_A_Count--;
+            motor_data.Encoder_A_Count--;
         }
         else
         {
-            Encoder_A_Count++;
+            motor_data.Encoder_A_Count++;
         }
         // printf("Encoder_A_Count:%d\r\n", Encoder_A_Count);
         // printf("PB0 interrupt\r\n");
@@ -104,11 +102,11 @@ void Encoder_EXTI_Callback(uint16_t GPIO_Pin)
         // PB1中断处理代码
         if (HAL_GPIO_ReadPin(ENCODE_R_A_GPIO_Port, ENCODE_R_A_Pin) == HAL_GPIO_ReadPin(ENCODE_R_B_GPIO_Port, ENCODE_R_B_Pin))
         {
-            Encoder_B_Count++;
+            motor_data.Encoder_B_Count++;
         }
         else
         {
-            Encoder_B_Count--;
+            motor_data.Encoder_B_Count--;
         }
         // printf("Encoder_B_Count:%d\r\n", Encoder_B_Count);
         // printf("PB1 interrupt\r\n");
@@ -119,6 +117,7 @@ void Set_Motor_Velocity(uint8_t motor, float Velocity)
 {
     uint8_t dir = Velocity > 0 ? CW : CCW;
     Velocity = Abs(Velocity);
+    Velocity = float_Map(Velocity, 0, 100, 8, 100);
     Velocity = clamp(Velocity, 0, 100);
     Set_Motor_Dir(motor, dir);
     set_pwm_duty(motor, Velocity);
