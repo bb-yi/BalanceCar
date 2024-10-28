@@ -5,53 +5,73 @@
 #include "OLED.h"
 extern MPU6050_t MPU6050;
 extern MOTOR_Data motor_data;
-
+float balance_angle = 9.5f;
 float Balance(float target_angle)
 {
-    float Balance_Kp = 6.5f, Balance_Kd = 0.085f; // 直立环PD参数
+    // float Balance_Kp = 6.5f, Balance_Kd = 0.085f; // 直立环PD参数
+    float Balance_Kp = 10.0f, Balance_Kd = 0.45f; // 直立环PD参数
     float Angle_err, Gyro_bias;
     float balance;
-    Angle_err = -(target_angle + 9.0f - MPU6050.KalmanAngleX); // 求出平衡的角度中值 和机械相关
+    Angle_err = -(target_angle + balance_angle - MPU6050.KalmanAngleX); // 求出平衡的角度中值 和机械相关
     Gyro_bias = MPU6050.Gx;
     balance = Balance_Kp * Angle_err + Balance_Kd * Gyro_bias; // 计算平衡控制的电机PWM
     return balance;
 }
-
-float Velocity_Control(int encoder_left, int encoder_right)
+static float Integral;
+float Velocity_Control(float target_velocity, float encoder_left, float encoder_right)
 {
-    float Integral_max = 10;
+    // float kp = 0.4500f, ki = 0.0001f; // 速度环PID参数
+    float kp = 0.380f, ki = 0.0005f; // 速度环PID参数
 
-    float Velocity_Kp = 1.0f, Velocity_Ki = 0.00f; // 速度环PI参数
-
-    static float velocity, Encoder_bias;
-    static float Encoder_Integral;
-    // if (Flag_Stop == 1)
-    //     Encoder_Integral = 0; // 电机关闭后清除积分
-
-    /*=================速度PI控制器===================*/
-    Encoder_bias = (encoder_left + encoder_right);
-
-    Encoder_Integral += Encoder_bias; // 积分出位移 积分时间：10ms
-    if (Encoder_Integral > Integral_max)
-        Encoder_Integral = Integral_max; // 积分限幅
-    if (Encoder_Integral < -Integral_max)
-        Encoder_Integral = -Integral_max;                                   // 积分限幅
-    velocity = Encoder_bias * Velocity_Kp + Encoder_Integral * Velocity_Ki; // 速度控制
-    return velocity;
+    float integral_max = 10;
+    float err_vel, output;
+    err_vel = (target_velocity - (encoder_left + encoder_right)); // 计算速度误差
+    Integral += err_vel;                                          // 积分
+    Integral = clamp(Integral, -integral_max, integral_max);      // 限幅
+    output = err_vel * kp + Integral * ki;                        // 输出
+    return output;
 }
+
+uint8_t OutOfControl_flag = 0;
+uint32_t start_time, now_time;
 void mian_control(void)
 {
-    float vel_output, output;
-    vel_output = Velocity_Control(motor_data.Filtered_Velocity_A, motor_data.Filtered_Velocity_B);
-    output = Balance(vel_output);                         // 计算平衡控制的电机PWM
-    output = Abs(MPU6050.KalmanAngleX) > 15 ? 0 : output; // 限幅
-    output = clamp(output, -30, 30);                      // 限幅
-    // printf("vel_output=%f,output=%f\r\n", vel_output, output);
-    // printf("output=%f,roll=%f,rollrate=%f\r\n", output, mpu6050_data.FilteredRoll, mpu6050_data.RollRate);
-    // OLED_ShowFloatNum(0, 0, output, 2, 1, OLED_6X8);            // 显示输出值
-    // OLED_ShowFloatNum(0, 8, mpu6050_data.Roll, 2, 1, OLED_6X8); // 显示Roll值
-    // OLED_ShowFloatNum(0, 16, mpu6050_data.Gx, 2, 1, OLED_6X8);  // 显示RollRate值
-    // OLED_UpdateArea(0, 0, 36, 24);                              // 更新显示区
+    float output_max = 100;
+    float vel_output, balance_output, output;
+    vel_output = Velocity_Control(0, motor_data.Filtered_Velocity_A, motor_data.Filtered_Velocity_B);
+    balance_output = Balance(vel_output);            // 计算平衡控制的电机PWM
+    output = vel_output + balance_output;            // 计算总输出
+    output = clamp(output, -output_max, output_max); // 限幅
+    if (Abs(MPU6050.KalmanAngleX - balance_angle) < 25)
+    {
+    }
+    else
+    {
+        output = 0;   // 限幅
+        Integral = 0; // 积分清零
+    }
+    if (Abs(output) != output_max)
+    {
+        OutOfControl_flag = 0;
+    }
+    if (Abs(output) == output_max && OutOfControl_flag == 0)
+    {
+        OutOfControl_flag = 1;
+        start_time = HAL_GetTick();
+    }
+
+    if (OutOfControl_flag == 1)
+    {
+        now_time = HAL_GetTick();
+        if (now_time - start_time > 500)
+        {
+            OutOfControl_flag = 0;
+            start_time = 0;
+            output = 0;
+            motor_stop();
+        }
+    }
+    // printf("flag%d,start_time%d,now_time%d,output%f\n", OutOfControl_flag, start_time, now_time, output);
     Set_Motor_Velocity(MOTOR_A, output); // 设置电机速度
     Set_Motor_Velocity(MOTOR_B, output); // 设置电机速度
 }

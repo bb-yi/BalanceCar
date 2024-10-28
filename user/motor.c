@@ -68,6 +68,12 @@ void set_pwm_duty(uint8_t motor, float duty)
     }
 }
 
+void motor_stop(void)
+{
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3); // 停止指定通道的 PWM
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4); // 停止指定通道的 PWM
+}
+
 void motor_init(void)
 {
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3); // 启动指定通道的 PWM
@@ -117,7 +123,7 @@ void Set_Motor_Velocity(uint8_t motor, float Velocity)
 {
     uint8_t dir = Velocity > 0 ? CW : CCW;
     Velocity = Abs(Velocity);
-    Velocity = Velocity < 1 ? 0 : float_Map(Velocity, 0, 100, 4, 100);
+    Velocity = Velocity < 1 ? 0 : float_Map(Velocity, 0, 100, 0, 100);
     Velocity = clamp(Velocity, 0, 100);
     Set_Motor_Dir(motor, dir);
     set_pwm_duty(motor, Velocity);

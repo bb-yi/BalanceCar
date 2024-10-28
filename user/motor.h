@@ -19,6 +19,7 @@ typedef struct
 #define CW 0
 #define CCW 1
 void motor_init(void);
+void motor_stop(void);
 void Encoder_EXTI_Callback(uint16_t GPIO_Pin);
 void set_pwm_duty(uint8_t motor, float duty);
 void Set_Motor_Velocity(uint8_t motor, float Velocity);

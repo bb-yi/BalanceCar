@@ -196,7 +196,7 @@ void StartTask02(void *argument)
   for (;;)
   {
     MPU6050_Read_All(&hi2c1, &MPU6050);
-    printf("ax=%.2f, ay=%.2f,gx=%.2f,A_sp=%.2f,B_sp=%.2f\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY, MPU6050.Gx, motor_data.Filtered_Velocity_A, motor_data.Filtered_Velocity_B);
+    // printf("ax=%.2f, ay=%.2f,gx=%.2f,A_sp=%.2f,B_sp=%.2f\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY, MPU6050.Gx, motor_data.Filtered_Velocity_A, motor_data.Filtered_Velocity_B);
 
     // osDelay(20);
 
@@ -219,7 +219,7 @@ void StartTask03(void *argument)
   motor_data.Filtered_Velocity_B = 0;
   motor_data.last_Encoder_A_Count = 0;
   motor_data.last_Encoder_B_Count = 0;
-  float Filtered_alpha = 0.8f;
+  float Filtered_alpha = 0.6f;
   /* Infinite loop */
   for (;;)
   {
